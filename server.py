@@ -66,7 +66,7 @@ def information(client, addr):
         rooms[room] = [client]
 
 def main():
-    HOST = '172.17.147.80'
+    HOST = '김준환 등신'
     PORT = 12321
 
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
