@@ -10,6 +10,8 @@ import os
 import threading
 import struct
 
+HOST = '127.0.0.1'
+PORT = 123
 
 try:
     from ctypes import windll
@@ -102,7 +104,7 @@ class FirstScreen(tk.Tk):
 
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
-                client_socket.connect(("127.0.0.1", 123))
+                client_socket.connect((HOST, PORT))
                 status = client_socket.recv(1024).decode('utf-8')
                 if status == 'not_allowed':
                     client_socket.close()
@@ -188,7 +190,7 @@ class ChatScreen(tk.Canvas):
 
         tk.Label(self, text="   ", font="lucida 15 bold", bg="#b5b3b3").place(x=4, y=29)
 
-        tk.Label(self, text="   ", font="lucida 15 bold", padx=20, fg="green", bg="#b5b3b3", anchor="w", justify="left").place(x=88, y=29, relwidth=1)
+        tk.Label(self, text="채팅방", font="lucida 15 bold", padx=20, fg="green", bg="#b5b3b3", anchor="w", justify="left").place(x=88, y=29, relwidth=1)
 
         self.create_image(60, 40, image=group_photo)
 
@@ -322,7 +324,7 @@ class ChatScreen(tk.Canvas):
 
         message = data['message']
         from_ = data['from']
-
+        name = data['name']
         sender_image = self.clients_connected[from_][1]
         sender_image_extension = self.clients_connected[from_][2]
 
@@ -335,10 +337,13 @@ class ChatScreen(tk.Canvas):
 
         m_frame = tk.Frame(self.scrollable_frame, bg="#595656")
 
-        m_frame.columnconfigure(1, weight=1)
+        m_frame.columnconfigure(2, weight=1)
 
         t_label = tk.Label(m_frame, bg="#595656",fg="white", text=datetime.now().strftime('%H:%M'), font="lucida 7 bold",justify="left", anchor="w")
-        t_label.grid(row=0, column=1, padx=2, sticky="w")
+        t_label.grid(row=1, column=2, padx=2, sticky="w")
+
+        m_label = tk.Label(m_frame, wraplength=250, fg="black", bg="#595656", text=name, font="lucida 9 bold",justify="left", anchor="w")
+        m_label.grid(row=0, column=1, padx=2, pady=2, sticky="w")
 
         m_label = tk.Label(m_frame, wraplength=250,fg="black", bg="#c5c7c9", text=message, font="lucida 9 bold", justify="left", anchor="w")
         m_label.grid(row=1, column=1, padx=2, pady=2, sticky="w")
@@ -362,8 +367,8 @@ class ChatScreen(tk.Canvas):
             self.entry.delete("1.0", "end-1c")
 
             from_ = self.user_id
-
-            data = {'from': from_, 'message': message}
+            name = self.parent.user
+            data = {'from': from_, 'message': message, 'name': name}
             data_bytes = pickle.dumps(data)
 
             self.client_socket.send(data_bytes)
@@ -373,14 +378,17 @@ class ChatScreen(tk.Canvas):
             m_frame.columnconfigure(0, weight=1)
 
             t_label = tk.Label(m_frame, bg="#595656", fg="white", text=datetime.now().strftime('%H:%M'), font="lucida 7 bold", justify="right", anchor="e")
-            t_label.grid(row=0, column=0, padx=2, sticky="e")
+            t_label.grid(row=1, column=0, padx=2, sticky="e")
+
+            m_label = tk.Label(m_frame, wraplength=250, text=name, fg="black", bg="#595656", font="lucida 9 bold",justify="left", anchor="e")
+            m_label.grid(row=0, column=1, padx=2, pady=2, sticky="e")
 
             m_label = tk.Label(m_frame, wraplength=250, text=message, fg="black", bg="#40C961",font="lucida 9 bold", justify="left",anchor="e")
-            m_label.grid(row=1, column=0, padx=2, pady=2, sticky="e")
+            m_label.grid(row=1, column=1, padx=2, pady=2, sticky="e")
 
             i_label = tk.Label(m_frame, bg="#595656", image=self.user_image)
             i_label.image = self.user_image
-            i_label.grid(row=0, column=1, rowspan=2, sticky="e")
+            i_label.grid(row=0, column=2, rowspan=2, sticky="e")
 
             m_frame.pack(pady=10, padx=10, fill="x", expand=True, anchor="e")
 
@@ -468,7 +476,6 @@ class ChatScreen(tk.Canvas):
             b = self.clients_online_labels[user_id][0]
             y_co = self.clients_online_labels[user_id][1]
             if user_id == client_id:
-                print("yes")
                 b.destroy()
                 del self.clients_online_labels[client_id]
                 import os
