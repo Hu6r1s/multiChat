@@ -27,7 +27,7 @@ class FirstScreen(tk.Tk):
         self.x_co = int((screen_width / 2) - (550 / 2))
         self.y_co = int((screen_height / 2) - (400 / 2)) - 80
         self.geometry(f"550x400+{self.x_co}+{self.y_co}")
-        self.title("Chat Room")
+        self.title("채팅프로그램")
 
         self.user = None
         self.image_extension = None
@@ -100,19 +100,17 @@ class FirstScreen(tk.Tk):
             self.profile_label.config(image="")
             self.user = self.username_entry.get()
 
-
-
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
                 client_socket.connect(("127.0.0.1", 123))
-                status = client_socket.recv(1024).decode()
+                status = client_socket.recv(1024).decode('utf-8')
                 if status == 'not_allowed':
                     client_socket.close()
-                    messagebox.showinfo(title="Can't connect !", message='Sorry, server is completely occupied.Try again later')
+                    messagebox.showinfo(title="인원초과", message='채팅방이 가득찼습니다. 나중에 다시 시도하세요.')
                     return
 
             except ConnectionRefusedError:
-                messagebox.showinfo(title="연결오류", message="서버가 닫혀있습니다")
+                messagebox.showinfo(title="연결오류", message="서버가 닫혀있습니다.")
                 return
 
             client_socket.send(self.user.encode('utf-8'))
@@ -126,8 +124,8 @@ class FirstScreen(tk.Tk):
             image_len_bytes = struct.pack('i', image_len)
             client_socket.send(image_len_bytes)
 
-            if client_socket.recv(1024).decode() == 'received':
-                client_socket.send(str(self.image_extension).strip().encode())
+            if client_socket.recv(1024).decode('utf-8') == 'received':
+                client_socket.send(str(self.image_extension).strip().encode('utf-8'))
 
             client_socket.send(image_bytes)
 
@@ -142,17 +140,15 @@ class FirstScreen(tk.Tk):
 
             clients_connected = pickle.loads(b)
 
-            client_socket.send('image_received'.encode())
+            client_socket.send('image_received'.encode('utf-8'))
 
             user_id = struct.unpack('i', client_socket.recv(1024))[0]
-            print(f"{self.user} is user no. {user_id}")
             ChatScreen(self, self.first_frame, client_socket, clients_connected, user_id)
 
 
 class ChatScreen(tk.Canvas):
     def __init__(self, parent, first_frame, client_socket, clients_connected, user_id):
         super().__init__(parent, bg="#2b2b2b")
-        print(user_id)
         self.window = 'ChatScreen'
 
         self.first_frame = first_frame
@@ -167,8 +163,6 @@ class ChatScreen(tk.Canvas):
 
 
         self.clients_connected = clients_connected
-
-        # self.parent.protocol("WM_DELETE_WINDOW", lambda: self.on_closing(self.first_frame))
         self.parent.protocol("WM_DELETE_WINDOW", self.on_closing)
 
         self.client_socket = client_socket
@@ -182,11 +176,6 @@ class ChatScreen(tk.Canvas):
         user_image = user_image.resize((40, 40))
         self.user_image = ImageTk.PhotoImage(user_image)
 
-        # global background
-        # background = Image.open("images/chat_bg_ca.jpg")
-        # background = background.resize((1600, 1500))
-        # background = ImageTk.PhotoImage(background)
-
         global group_photo
         group_photo = Image.open('images/group_ca.png')
         group_photo = group_photo.resize((60, 60))
@@ -195,19 +184,15 @@ class ChatScreen(tk.Canvas):
         self.y = 140
         self.clients_online_labels = {}
 
-        # self.create_image(0, 0, image=background)
-
-        self.create_text(545, 120, text="Online", font="lucida 12 bold", fill="#40C961")
+        self.create_text(545, 120, text="대화상대", font="lucida 12 bold", fill="#40C961")
 
         tk.Label(self, text="   ", font="lucida 15 bold", bg="#b5b3b3").place(x=4, y=29)
 
-        tk.Label(self, text="Group Chat", font="lucida 15 bold", padx=20, fg="green", bg="#b5b3b3", anchor="w", justify="left").place(x=88, y=29, relwidth=1)
+        tk.Label(self, text="   ", font="lucida 15 bold", padx=20, fg="green", bg="#b5b3b3", anchor="w", justify="left").place(x=88, y=29, relwidth=1)
 
         self.create_image(60, 40, image=group_photo)
 
         container = tk.Frame(self)
-        # 595656
-        # d9d5d4
         container.place(x=40, y=120, width=450, height=550)
         self.canvas = tk.Canvas(container, bg="#595656")
         self.scrollable_frame = tk.Frame(self.canvas, bg="#595656")
@@ -238,8 +223,6 @@ class ChatScreen(tk.Canvas):
         self.entry.place(x=40, y=681)
 
         self.entry.focus_set()
-
-        # ---------------------------emoji code logic-----------------------------------
 
         emoji_data = [('emojis/u0001f44a.png', '\U0001F44A'), ('emojis/u0001f44c.png', '\U0001F44C'), ('emojis/u0001f44d.png', '\U0001F44D'),
                     ('emojis/u0001f495.png', '\U0001F495'), ('emojis/u0001f496.png', '\U0001F496'), ('emojis/u0001f4a6.png', '\U0001F4A6'),
@@ -273,14 +256,12 @@ class ChatScreen(tk.Canvas):
                 emoji_y_pos += 25
                 emoji_x_pos = 490
 
-        # -------------------end of emoji code logic-------------------------------------
-
         m_frame = tk.Frame(self.scrollable_frame, bg="#d9d5d4")
 
         t_label = tk.Label(m_frame, bg="#d9d5d4", text=datetime.now().strftime('%H:%M'), font="lucida 9 bold")
         t_label.pack()
 
-        m_label = tk.Label(m_frame, wraplength=250, text=f"Happy Chatting {self.parent.user}",font="lucida 10 bold", bg="orange")
+        m_label = tk.Label(m_frame, wraplength=250, text=f"{self.parent.user}님 반갑습니다",font="lucida 10 bold", bg="orange")
         m_label.pack(fill="x")
 
         m_frame.pack(pady=10, padx=10, fill="x", expand=True, anchor="e")
@@ -296,7 +277,7 @@ class ChatScreen(tk.Canvas):
     def receive_data(self):
         while True:
             try:
-                data_type = self.client_socket.recv(1024).decode()
+                data_type = self.client_socket.recv(1024).decode('utf-8')
 
                 if data_type == 'notification':
                     data_size = self.client_socket.recv(2048)
@@ -317,18 +298,18 @@ class ChatScreen(tk.Canvas):
                     self.received_message_format(data)
 
             except ConnectionAbortedError:
-                print("you disconnected ...")
+                print("프로그램이 종료되었습니다.")
                 self.client_socket.close()
                 break
             except ConnectionResetError:
-                messagebox.showinfo(title='No Connection !', message="Server offline..try connecting again later")
+                messagebox.showinfo(title="연결오류", message="서버가 닫혀있습니다.")
                 self.client_socket.close()
                 self.first_screen()
                 break
 
     def on_closing(self):
         if self.window == 'ChatScreen':
-            res = messagebox.askyesno(title='Warning !', message="Do you really want to disconnect ?")
+            res = messagebox.askyesno(title='종료', message="채팅방에서 나가시겠습니까?")
             if res:
                 import os
                 os.remove(self.all_user_image[self.user_id])
@@ -341,13 +322,10 @@ class ChatScreen(tk.Canvas):
 
         message = data['message']
         from_ = data['from']
-        print('message = ', message)
-        print('from = ', from_)
 
         sender_image = self.clients_connected[from_][1]
         sender_image_extension = self.clients_connected[from_][2]
 
-        # if not os.path.exists(f"{from_}.{sender_image_extension}"):
         with open(f"{from_}.{sender_image_extension}", 'wb') as f:
             f.write(sender_image)
 
@@ -419,7 +397,6 @@ class ChatScreen(tk.Canvas):
             client_id = data['id']
             self.clients_connected[client_id] = (name, image, extension)
             self.clients_online([client_id, name, image, extension])
-            # print(self.clients_connected)
 
         elif data['n_type'] == 'left':
             client_id = data['id']
@@ -495,7 +472,6 @@ class ChatScreen(tk.Canvas):
                 b.destroy()
                 del self.clients_online_labels[client_id]
                 import os
-                # os.remove(self.all_user_image[user_id])
 
             elif user_id > client_id:
                 y_co -= 60
