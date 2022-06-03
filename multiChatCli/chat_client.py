@@ -38,20 +38,20 @@ class FirstScreen(tk.Tk):
         self.first_frame = tk.Frame(self, bg="sky blue")
         self.first_frame.pack(fill="both", expand=True)
 
-        app_icon = Image.open('images/chat_ca.png')
+        app_icon = Image.open('multiChatCli/images/chat_ca.png')
         app_icon = ImageTk.PhotoImage(app_icon)
 
         self.iconphoto(False, app_icon)
 
-        background = Image.open("images/login_bg_ca.jpg")
+        background = Image.open("multiChatCli/images/login_bg_ca.jpg")
         background = background.resize((550, 400))
         background = ImageTk.PhotoImage(background)
 
-        upload_image = Image.open('images/upload_ca.png')
+        upload_image = Image.open('multiChatCli/images/upload_ca.png')
         upload_image = upload_image.resize((25, 25))
         upload_image = ImageTk.PhotoImage(upload_image)
 
-        self.user_image = 'images/user.png'
+        self.user_image = 'multiChatCli/images/user.png'
 
         tk.Label(self.first_frame, image=background).place(x=0, y=0)
 
@@ -179,7 +179,7 @@ class ChatScreen(tk.Canvas):
         self.user_image = ImageTk.PhotoImage(user_image)
 
         global group_photo
-        group_photo = Image.open('images/group_ca.png')
+        group_photo = Image.open('multiChatCli/images/group_ca.png')
         group_photo = group_photo.resize((60, 60))
         group_photo = ImageTk.PhotoImage(group_photo)
 
@@ -226,17 +226,17 @@ class ChatScreen(tk.Canvas):
 
         self.entry.focus_set()
 
-        emoji_data = [('emojis/u0001f44a.png', '\U0001F44A'), ('emojis/u0001f44c.png', '\U0001F44C'), ('emojis/u0001f44d.png', '\U0001F44D'),
-                    ('emojis/u0001f495.png', '\U0001F495'), ('emojis/u0001f496.png', '\U0001F496'), ('emojis/u0001f4a6.png', '\U0001F4A6'),
-                    ('emojis/u0001f4a9.png', '\U0001F4A9'), ('emojis/u0001f4af.png', '\U0001F4AF'), ('emojis/u0001f595.png', '\U0001F595'),
-                    ('emojis/u0001f600.png', '\U0001F600'), ('emojis/u0001f602.png', '\U0001F602'), ('emojis/u0001f603.png', '\U0001F603'),
-                    ('emojis/u0001f605.png', '\U0001F605'), ('emojis/u0001f606.png', '\U0001F606'), ('emojis/u0001f608.png', '\U0001F608'),
-                    ('emojis/u0001f60d.png', '\U0001F60D'), ('emojis/u0001f60e.png', '\U0001F60E'), ('emojis/u0001f60f.png', '\U0001F60F'),
-                    ('emojis/u0001f610.png', '\U0001F610'), ('emojis/u0001f618.png', '\U0001F618'), ('emojis/u0001f61b.png', '\U0001F61B'),
-                    ('emojis/u0001f61d.png', '\U0001F61D'), ('emojis/u0001f621.png', '\U0001F621'), ('emojis/u0001f624.png', '\U0001F621'),
-                    ('emojis/u0001f631.png', '\U0001F631'), ('emojis/u0001f632.png', '\U0001F632'), ('emojis/u0001f634.png', '\U0001F634'),
-                    ('emojis/u0001f637.png', '\U0001F637'), ('emojis/u0001f642.png', '\U0001F642'), ('emojis/u0001f64f.png', '\U0001F64F'),
-                    ('emojis/u0001f920.png', '\U0001F920'), ('emojis/u0001f923.png', '\U0001F923'), ('emojis/u0001f928.png', '\U0001F928')]
+        emoji_data = [('multiChatCli/emojis/u0001f44a.png', '\U0001F44A'), ('multiChatCli/emojis/u0001f44c.png', '\U0001F44C'), ('multiChatCli/emojis/u0001f44d.png', '\U0001F44D'),
+                    ('multiChatCli/emojis/u0001f495.png', '\U0001F495'), ('multiChatCli/emojis/u0001f496.png', '\U0001F496'), ('multiChatCli/emojis/u0001f4a6.png', '\U0001F4A6'),
+                    ('multiChatCli/emojis/u0001f4a9.png', '\U0001F4A9'), ('multiChatCli/emojis/u0001f4af.png', '\U0001F4AF'), ('multiChatCli/emojis/u0001f595.png', '\U0001F595'),
+                    ('multiChatCli/emojis/u0001f600.png', '\U0001F600'), ('multiChatCli/emojis/u0001f602.png', '\U0001F602'), ('multiChatCli/emojis/u0001f603.png', '\U0001F603'),
+                    ('multiChatCli/emojis/u0001f605.png', '\U0001F605'), ('multiChatCli/emojis/u0001f606.png', '\U0001F606'), ('multiChatCli/emojis/u0001f608.png', '\U0001F608'),
+                    ('multiChatCli/emojis/u0001f60d.png', '\U0001F60D'), ('multiChatCli/emojis/u0001f60e.png', '\U0001F60E'), ('multiChatCli/emojis/u0001f60f.png', '\U0001F60F'),
+                    ('multiChatCli/emojis/u0001f610.png', '\U0001F610'), ('multiChatCli/emojis/u0001f618.png', '\U0001F618'), ('multiChatCli/emojis/u0001f61b.png', '\U0001F61B'),
+                    ('multiChatCli/emojis/u0001f61d.png', '\U0001F61D'), ('multiChatCli/emojis/u0001f621.png', '\U0001F621'), ('multiChatCli/emojis/u0001f624.png', '\U0001F621'),
+                    ('multiChatCli/emojis/u0001f631.png', '\U0001F631'), ('multiChatCli/emojis/u0001f632.png', '\U0001F632'), ('multiChatCli/emojis/u0001f634.png', '\U0001F634'),
+                    ('multiChatCli/emojis/u0001f637.png', '\U0001F637'), ('multiChatCli/emojis/u0001f642.png', '\U0001F642'), ('multiChatCli/emojis/u0001f64f.png', '\U0001F64F'),
+                    ('multiChatCli/emojis/u0001f920.png', '\U0001F920'), ('multiChatCli/emojis/u0001f923.png', '\U0001F923'), ('multiChatCli/emojis/u0001f928.png', '\U0001F928')]
 
         emoji_x_pos = 490
         emoji_y_pos = 520
