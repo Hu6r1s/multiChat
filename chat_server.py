@@ -16,6 +16,7 @@ def connection_requests():
     global count
     print('\033[38;5;11m', 'server start', '\033[0m')
     while True:
+        global client_socket, address
         client_socket, address = server_socket.accept()
         if len(clients_connected) == 100:
             client_socket.send('not_allowed'.encode('utf-8'))
@@ -25,13 +26,14 @@ def connection_requests():
             client_socket.send('allowed'.encode('utf-8'))
 
         try:
+            global client_name
             client_name = client_socket.recv(1024).decode('utf-8')
         except:
-            print(f"{address} disconnected")
+            print('\033[38;5;9m', f"{client_name} 해제 {address} {len(clients_connected)-1}", '\033[0m')
             client_socket.close()
             continue
 
-        print('\033[38;5;10m', f"{client_name} 연결 {address} {len(clients_connected)}", '\033[0m')
+        print('\033[38;5;10m', f"{client_name} 연결 {address} {len(clients_connected)+1}", '\033[0m')
         clients_connected[client_socket] = (client_name, count)
 
         image_size_bytes = client_socket.recv(1024)
@@ -78,7 +80,7 @@ def receive_data(client_socket):
         try:
             data_bytes = client_socket.recv(1024)
         except ConnectionResetError:
-            print(f"{clients_connected[client_socket][0]} disconnected")
+            print('\033[38;5;9m', f"{client_name} 해제 {address} {len(clients_connected)-1}", '\033[0m')
 
             for client in clients_connected:
                 if client != client_socket:
@@ -95,8 +97,8 @@ def receive_data(client_socket):
             del clients_connected[client_socket]
             client_socket.close()
             break
-        except ConnectionAbortedError: #오류발생시
-            print(f"{clients_connected[client_socket][0]} disconnected unexpectedly.")
+        except ConnectionAbortedError:
+            print('\033[38;5;9m', f"{client_name} 해제 {address} {len(clients_connected)-1}", '\033[0m')
 
             for client in clients_connected:
                 if client != client_socket:
