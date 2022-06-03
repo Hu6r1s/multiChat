@@ -1,87 +1,120 @@
-<<<<<<< HEAD
 import socket
+import struct
+import pickle
 import threading
 
-names = {}
-rooms = {}
-clients = {}
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.bind(('127.0.0.1', 123))
+server_socket.listen()
 
-def broadcast(soc, msg, option):
-    soc.sendall('ROOM_INSERT'.encode('utf-8'))
-    room_soc = soc.recv(1024).decode('utf-8')
-    for group in rooms[room_soc]:
-        if option == 1:
-            n = names[group]
-            soc.sendall(n.encode('utf-8'))
-            msg = ''
-        group.sendall(msg.encode('utf-8'))
+clients_connected = {}
+clients_data = {}
+count = 1
 
-def handle(soc, addr):
-    while True:
-        data = soc.recv(1024)
-        msg = data.decode('utf-8')
-        if msg == '/quit':
-            msg = names[soc] + ' 님이 퇴장했습니다.'
-            broadcast(soc, msg, 0)
-            soc.sendall(data)
-            break
-        elif msg == '/user':
-            broadcast(soc, msg, 1)
-        elif msg == '/room':
-            room_list = list(rooms.keys())
-            for value in room_list:
-                soc.sendall(value.encode('utf-8'))
-        else:
-            msg = names[soc] + ' : ' + msg
-            broadcast(soc, msg, 0)
-    soc.close()
-    print('\033[38;5;9m',names[soc], addr, '해제', '\033[0m')
-    remove(addr)
-    del clients[addr]
-    del names[soc]
 
-def remove(addr):
-    for value in list(rooms.values()):
-        if len(rooms) == 1 and len(value) == 1:
-            rooms.clear()
-        elif clients[addr] in value and 2 <= len(value):
-            a = value.index(clients[addr])
-            del value[a]
-        elif clients[addr] in value and 1 == len(value):
-            for key in list(rooms):
-                if rooms[key] == [clients[addr]]:
-                    del rooms[key]
-
-def information(client, addr):
-    client.sendall('NICKNAME_INSERT'.encode('utf-8'))
-    name = client.recv(1024).decode('utf-8')
-    names[client] = name
-
-    clients[addr] = client
-
-    client.sendall('ROOM_INSERT'.encode('utf-8'))
-    room = client.recv(1024).decode('utf-8')
-    if room in rooms:
-        rooms[room].extend([client])
-    else:
-        rooms[room] = [client]
-
-if __name__ == "__main__":
-    HOST = '172.17.147.80'
-    PORT = 12321
-
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind((HOST, PORT))
-    server_socket.listen()
-
+def connection_requests():
+    global count
     print('\033[38;5;11m', 'server start', '\033[0m')
-
     while True:
-        soc, addr = server_socket.accept()
-        information(soc, addr)
-        print('\033[38;5;10m',names[soc], addr, '연결', '\033[0m')
-        msg = names[soc] + ' 님이 입장했습니다.'
-        broadcast(soc, msg, 0)
-        t = threading.Thread(target=handle, args=(soc, addr))
+        client_socket, address = server_socket.accept()
+        if len(clients_connected) == 100:
+            client_socket.send('not_allowed'.encode('utf-8'))
+            client_socket.close()
+            continue
+        else:
+            client_socket.send('allowed'.encode('utf-8'))
+
+        try:
+            client_name = client_socket.recv(1024).decode('utf-8')
+        except:
+            print(f"{address} disconnected")
+            client_socket.close()
+            continue
+
+        print('\033[38;5;10m', f"{client_name} 연결 {address} {len(clients_connected)}", '\033[0m')
+        clients_connected[client_socket] = (client_name, count)
+
+        image_size_bytes = client_socket.recv(1024)
+        image_size_int = struct.unpack('i', image_size_bytes)[0]
+
+        client_socket.send('received'.encode('utf-8'))
+        image_extension = client_socket.recv(1024).decode('utf-8')
+
+        b = b''
+        while True:
+            image_bytes = client_socket.recv(1024)
+            b += image_bytes
+            if len(b) == image_size_int:
+                break
+
+        clients_data[count] = (client_name, b, image_extension)
+
+        clients_data_bytes = pickle.dumps(clients_data)
+        clients_data_length = struct.pack('i', len(clients_data_bytes))
+
+        client_socket.send(clients_data_length)
+        client_socket.send(clients_data_bytes)
+
+        if client_socket.recv(1024).decode('utf-8') == 'image_received':
+            client_socket.send(struct.pack('i', count))
+
+            for client in clients_connected:
+                if client != client_socket:
+                    client.send('notification'.encode('utf-8'))
+                    data = pickle.dumps(
+                        {'message': f"{clients_connected[client_socket][0]} 님이 입장했습니다", 'extension': image_extension,
+                        'image_bytes': b, 'name': clients_connected[client_socket][0], 'n_type': 'joined', 'id': count})
+                    data_length_bytes = struct.pack('i', len(data))
+                    client.send(data_length_bytes)
+
+                    client.send(data)
+        count += 1
+        t = threading.Thread(target=receive_data, args=(client_socket,))
         t.start()
 
+
+def receive_data(client_socket):
+    while True:
+        try:
+            data_bytes = client_socket.recv(1024)
+        except ConnectionResetError:
+            print(f"{clients_connected[client_socket][0]} disconnected")
+
+            for client in clients_connected:
+                if client != client_socket:
+                    client.send('notification'.encode('utf-8'))
+
+                    data = pickle.dumps({'message': f"{clients_connected[client_socket][0]} 님이 퇴장했습니다",'id': clients_connected[client_socket][1], 'n_type': 'left'})
+
+                    data_length_bytes = struct.pack('i', len(data))
+                    client.send(data_length_bytes)
+
+                    client.send(data)
+
+            del clients_data[clients_connected[client_socket][1]]
+            del clients_connected[client_socket]
+            client_socket.close()
+            break
+        except ConnectionAbortedError: #오류발생시
+            print(f"{clients_connected[client_socket][0]} disconnected unexpectedly.")
+
+            for client in clients_connected:
+                if client != client_socket:
+                    client.send('notification'.encode('utf-8'))
+                    data = pickle.dumps({'message': f"{clients_connected[client_socket][0]} 님이 퇴장했습니다", 'id': clients_connected[client_socket][1], 'n_type': 'left'})
+                    data_length_bytes = struct.pack('i', len(data))
+                    client.send(data_length_bytes)
+                    client.send(data)
+
+            del clients_data[clients_connected[client_socket][1]]
+            del clients_connected[client_socket]
+            client_socket.close()
+            break
+
+        for client in clients_connected:
+            if client != client_socket:
+                client.send('message'.encode('utf-8'))
+                client.send(data_bytes)
+
+
+connection_requests()
